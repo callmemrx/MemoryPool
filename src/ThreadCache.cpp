@@ -101,7 +101,7 @@ void ThreadCache::ReturnToCentralCache(void* start, size_t size)
 
 	//保留一部分在ThreadCache中（比如保留1/4）
 	size_t keepNum = std::max(batchNum / 4, size_t(1));
-	size_t retrunNum = batchNum - keepNum;
+	size_t returnNum = batchNum - keepNum;
 
 	//将内存块串成链表
 	char* current = static_cast<char*>(start);

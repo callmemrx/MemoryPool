@@ -15,7 +15,7 @@ static const size_t SPAN_PAGES = 8;
 CentralCache::CentralCache()
 {
     for (auto& ptr : centralFreeList_) {
-        prt.store(nullptr, std::memory_order_relaxed)
+        ptr.store(nullptr, std::memory_order_relaxed)
     }
     for (auto& lock : locks_) {
         lock.clear();
@@ -70,7 +70,7 @@ void* CentralCache::FetchRange(size_t index)
 
             //确保至少有两个块才构建链表
             if (blockNum > 1) {
-                for (size_t i = 0; i < blockNum; ++i) {
+                for (size_t i = 1; i < blockNum; ++i) {
                     void* current = start + (i - 1) * size;
                     void* next = start + i * size;
                     *reinterpret_cast<void**>(current) = next;
@@ -125,7 +125,7 @@ void CentralCache::ReturnRange(void* start, size_t size, size_t index)
     if (!start || index >= FREE_LIST_SIZE)
         return;
 
-    size_t blockSize = (index + 1) * ALIGENMENT;
+    size_t blockSize = (index + 1) * ALIGNMENT;
     size_t blockCount = size / blockSize;
 
     while (locks_[index].test_and_set(std::memory_order_acquire)) {
@@ -183,13 +183,13 @@ void CentralCache::PerformDelayedReturn(size_t index)
     lastReturnTimes_[index] = std::chrono::steady_clock::now();
 
     //统计每个span的空闲块数
-    std::unordered_map<Spantracker*, size_t> spanFreeCounts;
+    std::unordered_map<SpanTracker*, size_t> spanFreeCounts;
     void* currentBlock = centralFreeList_[index].load(std::memory_order_relaxed);
 
     while (currentBlock) {
-        Spantracker* tracker = GetSpanTracker(currentBlock);
+        SpanTracker* tracker = GetSpanTracker(currentBlock);
         if (tracker) {
-            spanFreeCounts[tracker] ++;
+            spanFreeCounts[tracker]++;
         }
         currentBlock = *reinterpret_cast<void**>(currentBlock);
     }

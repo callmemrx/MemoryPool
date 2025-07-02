@@ -22,7 +22,7 @@ class CentralCache
 public:
    static CentralCache& GetInstance()
    {
-      staric CentralCache instance;
+      static CentralCache instance;
       return instance;
    }
 
